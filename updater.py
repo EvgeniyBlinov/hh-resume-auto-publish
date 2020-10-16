@@ -3,6 +3,7 @@ import sys
 import time
 import requests
 import logging
+import json
 
 log = logging.getLogger('hh-resume-auto-publish')
 log.setLevel(logging.DEBUG)
@@ -14,16 +15,13 @@ log.addHandler(ch)
 
 
 def get_resume_list():
-    url = f'https://api.hh.ru/resumes/mine'
+    url = 'https://api.hh.ru/resumes/mine'
     r = s.get(url)
 
     if r.status_code == 200:
         data = r.json()
-
         resume_ids = [resume['id'] for resume in data['items']]
-
         log.info('Loaded resume list ({0} items)'. format(len(resume_ids)))
-
         return resume_ids
     else:
         msg = "Can't get resume list from hh.ru!"
@@ -47,12 +45,31 @@ def update_resume(resume_id):
         log.error(f'{resume_id}: unknown status')
 
 
+def update_token():
+    global ref_token
+    global api_token
+    url='https://hh.ru/oauth/token'
+    data={'grant_type': 'refresh_token',
+          'refresh_token': ref_token}
+    r=requests.post(url = url, data = data)
+
+    if r.status_code == 204:
+        tokens=r.json()
+        api_token=tokens['access_token']
+        ref_token=tokens['refresh_token']
+        log.info('token updated')
+        s.headers.update({'Authorization': f'Bearer {api_token}'})
+    elif r.status_code == 400:
+        log.info('token not expired')
+
+
 # check if hh.ru API token is in environment variables
-if 'HH_TOKEN' in os.environ:
+if 'HH_TOKEN' in os.environ and 'HH_REFRESH_TOKEN' in os.environ:
     api_token = os.environ['HH_TOKEN']
+    ref_token = os.environ['HH_REFRESH_TOKEN']
 else:
     sys.exit("hh.ru API token is not specified! "
-             "Go to https://dev.hh.ru/admin?new-token=true and copy to env var 'HH_TOKEN'.",)
+             "Go to read README.md",)
 
 
 s = requests.Session()
@@ -67,13 +84,17 @@ else:
     # else update all available resumes
     resume_id_list = get_resume_list()
 
+
 # main loop
 if __name__ == '__main__':
     while True:
+        # check updatability token before request to API
+        update_token()
+
         for id in resume_id_list:
             update_resume(id)
             time.sleep(5)
 
-        # sleep 90 minutes
+        # sleep 60 minutes
         log.info('going sleep...')
-        time.sleep(90 * 60)
+        time.sleep(60 * 60)

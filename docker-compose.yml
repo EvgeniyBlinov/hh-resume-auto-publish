@@ -6,6 +6,7 @@ services:
     volumes:
       - .:/app
     environment:
-      HH_TOKEN: <paste your token here>
+      HH_TOKEN: <paste your access token here>
+      HH_REFRESH_TOKEN: <paste your refresh token here>
 #      HH_RESUME_ID: <paste your resume id here and uncomment the line>
     restart: unless-stopped
