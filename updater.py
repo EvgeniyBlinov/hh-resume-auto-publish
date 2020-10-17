@@ -63,7 +63,7 @@ def update_token():
         log.info('token not expired')
 
 
-# check if hh.ru API token is in environment variables
+# check if hh.ru API tokens is in environment variables
 if 'HH_TOKEN' in os.environ and 'HH_REFRESH_TOKEN' in os.environ:
     api_token = os.environ['HH_TOKEN']
     ref_token = os.environ['HH_REFRESH_TOKEN']
