@@ -53,7 +53,7 @@ def update_token():
           'refresh_token': ref_token}
     r=requests.post(url = url, data = data)
 
-    if r.status_code == 204:
+    if r.status_code == 200:
         tokens=r.json()
         api_token=tokens['access_token']
         ref_token=tokens['refresh_token']
