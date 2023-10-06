@@ -1,13 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-CLIENT_ID=<необходимо заполнить значениями, выданными при регистрации приложения>
-CLIENT_SECRET=<необходимо заполнить значениями, выданными при регистрации приложения>
-CODE=<значение authorization_code, полученное при логине https://hh.ru/oauth/authorize?response_type=code&client_id={client_id}>
+set -o allexport
+source .env
+set +o allexport
 
-TOKENS=$(curl -H "User-Agent: test-api/1.0 (feedback@botayhard.me)" \
+TOKENS=$(curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0" \
   -H "Content-Type: application/x-www-form-urlencoded" -X POST -d \
-  "grant_type=authorization_code" -d "client_id=$CLIENT_ID" -d \
-  "client_secret=$CLIENT_SECRET" -d "code=$CODE" \
+  "grant_type=authorization_code" -d "client_id=${CLIENT_ID}" -d \
+  "client_secret=${CLIENT_SECRET}" -d "code=${CODE}" \
   'https://hh.ru/oauth/token' | jq '.access_token + " " + .refresh_token')
 
 TOKENS=$(echo $TOKENS | tr "\"" " ")
@@ -15,5 +15,5 @@ TOKENS=$(echo $TOKENS | tr "\"" " ")
 ACCESS_TOKEN=$(echo $TOKENS | awk '{print $1}')
 REFRESH_TOKEN=$(echo $TOKENS | awk '{print $2}')
 
-sed -i 's|HH_TOKEN: \([A-Z0-9<>]\)*|HH_TOKEN: '"${ACCESS_TOKEN}"'|g' docker-compose.yml
-sed -i 's|HH_REFRESH_TOKEN: \([A-Z0-9<>]\)*|HH_REFRESH_TOKEN: '"${REFRESH_TOKEN}"'|g' docker-compose.yml
+sed -i 's|HH_TOKEN=.*|HH_TOKEN='"${ACCESS_TOKEN}"'|g' .env
+sed -i 's|HH_REFRESH_TOKEN=.*|HH_REFRESH_TOKEN='"${REFRESH_TOKEN}"'|g' .env

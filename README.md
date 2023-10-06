@@ -6,6 +6,6 @@ Script to update your resumes (CV) on hh.ru automatically.
 1. Get tokens:
   * Go to `https://dev.hh.ru/admin` and register app for get <client_id> and <client_secret>
   * Go to `https://hh.ru/oauth/authorize?response_type=code&client_id=<client_id>` for get `https://hh.ru/?code=<code>`
-  * Put them all to `get_user_tokens.sh`
+  * Put them all to `.env`
 2. `bash get_user_tokens.sh`
 3. `docker-compose up -d`
