@@ -5,12 +5,14 @@ import requests
 import logging
 import json
 
+import argparse
+import dotenv
 
 class HH(object):
 
     """Docstring for HH. """
 
-    def __init__(self, s: requests.sessions.Session, client_id: str, client_secret: str, code: str, api_token: str, ref_token: str, resume_id: str):
+    def __init__(self, s: requests.sessions.Session, client_id: str, client_secret: str, code: str, api_token: str, ref_token: str, resume_id: str, dotenv_file: str):
         """TODO: to be defined. """
         self.s = s
         self.client_id = client_id
@@ -18,6 +20,7 @@ class HH(object):
         self.code = code
         self.api_token = api_token
         self.ref_token = ref_token
+        self.dotenv_file = dotenv_file
 
         s.headers.update({'Authorization': f'Bearer {self.api_token}'})
 
@@ -97,11 +100,15 @@ class HH(object):
             tokens=r.json()
             self.api_token=tokens['access_token']
             self.ref_token=tokens['refresh_token']
+
+            dotenv.set_key(self.dotenv_file, "HH_TOKEN", self.api_token)
+            dotenv.set_key(self.dotenv_file, "HH_REFRESH_TOKEN", self.ref_token)
+
             log.info('token updated')
             s.headers.update({'Authorization': f'Bearer {self.api_token}'})
         elif r.status_code == 400:
             log.info('token not expired')
-            # log.error('update_authorization_code: %s' % r.json())
+            log.error('update_authorization_code: %s' % r.json())
 
 
     def update(self):
@@ -117,6 +124,9 @@ class HH(object):
             log.info('going sleep...')
             time.sleep(60 * 60)
 
+
+dotenv_file = dotenv.find_dotenv()
+dotenv.load_dotenv(dotenv_file)
 
 
 # check if hh.ru API tokens is in environment variables
@@ -143,9 +153,20 @@ log.addHandler(ch)
 
 s = requests.Session()
 
-hh = HH(s, client_id, client_secret, code, api_token, ref_token, resume_id)
+hh = HH(s, client_id, client_secret, code, api_token, ref_token, resume_id, dotenv_file)
 
 
 # main loop
 if __name__ == '__main__':
-    hh.update()
+    parser = argparse.ArgumentParser(description='hh-update')
+    parser.add_argument(
+        'cmd',
+        help="A directory containing pyproject.toml",
+    )
+    args = parser.parse_args()
+
+
+    if args.cmd == 'update':
+        hh.update()
+    if args.cmd == 'code':
+        hh.update_authorization_code()
